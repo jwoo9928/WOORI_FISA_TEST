@@ -46,5 +46,11 @@
     "id": 24,
     "title": "adipisci non ad dicta qui amet quaerat doloribus ea",
     "completed": false
+  },
+  {
+    "userId": 3,
+    "id": 43,
+    "title": "tempore ut sint quis recusandae",
+    "completed": true
   }
 ]
