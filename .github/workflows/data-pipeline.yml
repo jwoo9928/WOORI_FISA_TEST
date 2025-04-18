@@ -1,0 +1,42 @@
+name: Fetch JSONPlaceholder Todos
+
+on:
+  push:
+  schedule:
+    - cron: "*/5 * * * *" # 매 5분마다 실행 (UTC 기준)
+
+jobs:
+  fetch-and-save:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "16"
+
+      - name: Install curl and jq
+        run: sudo apt-get update && sudo apt-get install -y curl jq
+
+      - name: Fetch data and save to test.json
+        run: |
+          CURRENT_MIN=$(date -u +"%M")
+          NEXT_MIN=$(( (10#$CURRENT_MIN + 1) % 60 ))
+          if [ $NEXT_MIN -eq 0 ]; then
+            ID=1
+          else
+            ID=$NEXT_MIN
+          fi
+          echo "Fetching todo item ID: $ID"
+          curl -s https://jsonplaceholder.typicode.com/todos/$ID | jq '.' > test.json
+
+      - name: Commit and push test.json
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add test.json
+          git diff --cached --quiet || git commit -m "Update test.json (Todo ID: $ID)"
+          git push
