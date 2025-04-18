@@ -5,7 +5,6 @@ on:
   schedule:
     - cron: "*/5 * * * *" # 매 5분마다 실행 (UTC 기준)
 
-# 커밋·푸시 권한 허용
 permissions:
   contents: write
 
@@ -25,7 +24,7 @@ jobs:
       - name: Install curl and jq
         run: sudo apt-get update && sudo apt-get install -y curl jq
 
-      - name: Fetch data and save to test.json
+      - name: Fetch data and append to test.json
         run: |
           CURRENT_MIN=$(date -u +"%M")
           NEXT_MIN=$(( (10#$CURRENT_MIN + 1) % 60 ))
@@ -35,12 +34,20 @@ jobs:
             ID=$NEXT_MIN
           fi
           echo "Fetching todo item ID: $ID"
-          curl -s https://jsonplaceholder.typicode.com/todos/$ID | jq '.' > test.json
+          DATA=$(curl -s https://jsonplaceholder.typicode.com/todos/$ID)
+
+          # test.json이 없거나 비어있으면 초기화
+          if [ ! -s test.json ]; then
+            echo "[]" > test.json
+          fi
+
+          # 새 데이터를 JSON 배열에 추가
+          jq --argjson newItem "$DATA" '. += [$newItem]' test.json > tmp.json && mv tmp.json test.json
 
       - name: Commit and push test.json
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
           git add test.json
-          git diff --cached --quiet || git commit -m "Update test.json (Todo ID: $ID)"
+          git diff --cached --quiet || git commit -m "Append to test.json (Todo ID: $ID)"
           git push
