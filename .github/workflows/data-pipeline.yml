@@ -5,6 +5,10 @@ on:
   schedule:
     - cron: "*/5 * * * *" # 매 5분마다 실행 (UTC 기준)
 
+# 커밋·푸시 권한 허용
+permissions:
+  contents: write
+
 jobs:
   fetch-and-save:
     runs-on: ubuntu-latest
